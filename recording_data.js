@@ -1,5 +1,5 @@
 // Auto-generated
-// Last updated: 2026-06-25 00:23:08
+// Last updated: 2026-06-25 06:36:07
 window.__RECORDING_DATA__ = [
   {
     "date": "2026-06-23",
@@ -7,8 +7,7 @@ window.__RECORDING_DATA__ = [
     "duration_min": 0,
     "file": "douyin_live_388670993636_20260623_191018.mp4",
     "file_size_mb": 4.1,
-    "room_id": "388670993636",
-    "stream_url": ""
+    "room_id": "388670993636"
   },
   {
     "date": "2026-06-23",
@@ -16,8 +15,7 @@ window.__RECORDING_DATA__ = [
     "duration_min": 0,
     "file": "douyin_live_388670993636_20260623_191939.mp4",
     "file_size_mb": 1492.8,
-    "room_id": "388670993636",
-    "stream_url": ""
+    "room_id": "388670993636"
   },
   {
     "date": "2026-06-24",
@@ -25,7 +23,14 @@ window.__RECORDING_DATA__ = [
     "duration_min": 0,
     "file": "douyin_live_388670993636_20260624_192351.mp4",
     "file_size_mb": 3419.3,
-    "room_id": "388670993636",
-    "stream_url": ""
+    "room_id": "388670993636"
+  },
+  {
+    "date": "2026-06-25",
+    "start_time": "00:23:57",
+    "duration_min": 0,
+    "file": "douyin_live_388670993636_20260625_002357.mp4",
+    "file_size_mb": 98.4,
+    "room_id": "388670993636"
   }
 ];
