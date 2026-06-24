@@ -241,7 +241,9 @@ function renderSheet() {
       const val = row[ci] || '';
       // For live_records file column, make it clickable
       if (isLiveRec && ci === 4 && val) {
-        html += `<td><span class="file-link" onclick="openFile('${val}')" title="点击打开文件">${val}</span><span class="copy-btn" onclick="copyPath('${val}',event)" title="复制路径">📋</span></td>`;
+        const tip = isLocalServer() ? '点击播放' : '仅本地可播放';
+        const cls = isLocalServer() ? 'file-link' : 'file-link nonexist';
+        html += `<td><span class="${cls}" onclick="openFile('${val}')" title="${tip}">${val}</span><span class="copy-btn" onclick="copyPath('${val}',event)" title="复制路径">📋</span></td>`;
       } else {
         html += `<td contenteditable="true" data-row="${ri}" data-col="${ci}" data-sheet="${sheet.id}" onblur="cellChanged(this)">${val}</td>`;
       }
@@ -263,17 +265,19 @@ function renderSheet() {
   }
 }
 
+function isLocalServer() {
+  const host = window.location.hostname;
+  return host === 'localhost' || host === '127.0.0.1' || host.startsWith('192.168.');
+}
+
 function openFile(filename) {
-  const isHTTP = window.location.protocol === 'http:' || window.location.protocol === 'https:';
-  if (isHTTP) {
-    // Served via HTTP - stream video directly
+  if (isLocalServer()) {
+    // serve.py 本地服务器 → 可直接播放
     window.open(filename, '_blank');
-    showToast('正在打开: ' + filename);
+    showToast('正在播放: ' + filename);
   } else {
-    // File protocol - can't open directly, copy path
-    navigator.clipboard.writeText(filename).then(() => {
-      showToast('文件路径已复制，建议使用 python serve.py 启动服务器后直接播放');
-    });
+    // GitHub Pages 远程 → 视频文件不在云端
+    showToast('视频文件存储在本地电脑，请用 python serve.py 启动后播放');
   }
 }
 
