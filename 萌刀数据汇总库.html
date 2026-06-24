@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>萌刀数据汇总库</title>
+<script src="recording_data.js"></script>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: "Microsoft YaHei", "PingFang SC", sans-serif; background: #f0f2f5; color: #333; }
+.header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 16px 24px; display: flex; align-items: center; gap: 20px; box-shadow: 0 2px 8px rgba(0,0,0,.15); flex-wrap: wrap; }
+.header h1 { font-size: 20px; font-weight: 600; }
+.header .info { font-size: 13px; opacity: .85; }
+.header .live-badge { background: #ff4d4f; color: white; padding: 3px 10px; border-radius: 12px; font-size: 12px; animation: pulse 2s infinite; display: none; }
+.header .live-badge.on { display: inline-block; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.5} }
+.toolbar { display: flex; gap: 12px; align-items: center; padding: 10px 24px; background: white; border-bottom: 1px solid #e8e8e8; flex-wrap: wrap; }
+.toolbar button { padding: 6px 14px; border: 1px solid #d9d9d9; background: white; border-radius: 4px; cursor: pointer; font-size: 13px; white-space: nowrap; }
+.toolbar button:hover { border-color: #667eea; color: #667eea; }
+.toolbar button.primary { background: #667eea; color: white; border-color: #667eea; }
+.toolbar button.danger { background: #ff4d4f; color: white; border-color: #ff4d4f; }
+.toolbar button.success { background: #52c41a; color: white; border-color: #52c41a; }
+.toolbar .badge { background: #f6ffed; color: #52c41a; padding: 4px 10px; border-radius: 10px; font-size: 12px; border: 1px solid #b7eb8f; }
+.tabs { display: flex; background: white; padding: 0 24px; border-bottom: 2px solid #f0f2f5; overflow-x: auto; }
+.tab { padding: 10px 18px; cursor: pointer; border-bottom: 2px solid transparent; white-space: nowrap; font-size: 13px; color: #666; transition: all .2s; }
+.tab:hover { color: #667eea; }
+.tab.active { color: #667eea; border-bottom-color: #667eea; font-weight: 600; }
+.tab .tab-badge { background: #52c41a; color: white; font-size: 11px; padding: 1px 6px; border-radius: 8px; margin-left: 4px; }
+.content { padding: 16px 24px; }
+.sheet { display: none; }
+.sheet.active { display: block; }
+table { width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,.08); }
+th { background: #fafafa; padding: 10px 12px; text-align: left; font-weight: 600; font-size: 13px; border-bottom: 2px solid #e8e8e8; white-space: nowrap; }
+td { padding: 8px 12px; border-bottom: 1px solid #f0f0f0; font-size: 13px; }
+tr:hover td { background: #fafafa; }
+tr.auto-row td { background: #f6ffed; }
+tr.auto-row:hover td { background: #e6ffe0; }
+td[contenteditable] { outline: none; cursor: text; min-width: 80px; }
+td[contenteditable]:focus { background: #e6f7ff; box-shadow: inset 0 0 0 1px #667eea; }
+.file-link { color: #1890ff; cursor: pointer; text-decoration: underline; }
+.file-link:hover { color: #096dd9; }
+.file-link.nonexist { color: #999; text-decoration: line-through; }
+.copy-btn { color: #999; cursor: pointer; font-size: 11px; margin-left: 4px; }
+.copy-btn:hover { color: #667eea; }
+.add-row { padding: 8px; text-align: center; color: #999; cursor: pointer; font-size: 13px; }
+.add-row:hover { color: #667eea; background: #f5f5f5; }
+.del-btn { color: #ff4d4f; cursor: pointer; padding: 2px 6px; border-radius: 3px; font-size: 12px; }
+.del-btn:hover { background: #fff1f0; }
+.toast { position: fixed; top: 20px; right: 20px; background: #52c41a; color: white; padding: 10px 20px; border-radius: 6px; z-index: 999; animation: fadeOut 2s forwards; }
+@keyframes fadeOut { 0%,70% { opacity: 1; } 100% { opacity: 0; } }
+.empty { text-align: center; padding: 40px; color: #999; font-size: 14px; }
+.modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,.5); z-index: 1000; justify-content: center; align-items: center; }
+.modal.show { display: flex; }
+.modal-box { background: white; border-radius: 12px; padding: 30px; max-width: 600px; width: 90%; max-height: 80vh; overflow-y: auto; }
+.modal-box h3 { margin-bottom: 16px; }
+.modal-box input { width: 100%; padding: 8px 12px; border: 1px solid #d9d9d9; border-radius: 6px; margin: 6px 0; font-size: 13px; }
+.modal-box button { margin-top: 12px; padding: 8px 20px; }
+.footer { text-align: center; padding: 20px; color: #999; font-size: 12px; border-top: 1px solid #f0f0f0; margin-top: 20px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div style="flex:1">
+    <h1>萌刀 数据汇总库 <span class="live-badge" id="liveBadge">● 直播中</span></h1>
+    <div class="info">直播间: live.douyin.com/388670993636 ｜ 用户ID: 7502652394715726907 ｜ 监控中</div>
+  </div>
+</div>
+
+<div class="toolbar">
+  <button class="primary" onclick="addRow()">+ 新增行</button>
+  <button onclick="deleteSelected()">删除选中行</button>
+  <button class="success" onclick="syncRecordings()">🔄 同步录制记录</button>
+  <button onclick="addManualRecording()">📁 手动添加录制</button>
+  <button onclick="exportJSON()">⬇ 导出 JSON</button>
+  <button onclick="importJSON()">⬆ 导入 JSON</button>
+  <span id="syncStatus" class="badge" style="margin-left:auto"></span>
+</div>
+
+<div class="tabs" id="tabs"></div>
+<div class="content" id="content"></div>
+
+<div class="footer">
+  萌刀数据汇总库 &copy; 2026 ｜ 录制脚本自动同步 ｜ <a href="#" onclick="openRecordingsFolder()">打开录制文件夹</a>
+</div>
+
+<div class="modal" id="modal">
+  <div class="modal-box">
+    <h3>手动添加录制记录</h3>
+    <input type="text" id="mDate" placeholder="日期 (如 2026-06-24)">
+    <input type="text" id="mTime" placeholder="开播时间 (如 19:00)">
+    <input type="text" id="mDuration" placeholder="时长 (分钟)">
+    <input type="text" id="mFile" placeholder="文件名 (如 douyin_live_xxx.mp4)">
+    <input type="text" id="mTopic" placeholder="主题/内容">
+    <div style="display:flex;gap:8px">
+      <button class="primary" onclick="confirmManualAdd()">确认添加</button>
+      <button onclick="closeModal()">取消</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const SHEETS = [
+  { id: 'encyclopedia', name: '萌刀百科', cols: ['项目', '内容', '备注'], rows: [
+    ['主播昵称', '萌刀', ''],
+    ['用户ID', '7502652394715726907', ''],
+    ['直播间号', '388670993636', ''],
+    ['直播间链接', 'https://live.douyin.com/388670993636', ''],
+    ['直播平台', '抖音', ''],
+    ['首次记录日期', '2026-06-24', ''],
+    ['最近一次直播', '', '自动更新'],
+    ['累计录制次数', '', '自动更新'],
+    ['主播简介', '', ''],
+    ['代表作品', '', ''],
+  ]},
+  { id: 'live_records', name: '直播记录', cols: ['日期', '开播时间', '时长(分)', '主题/内容', '录制文件', '文件大小', '备注'], rows: [] },
+  { id: 'songs', name: '歌曲/作品', cols: ['序号', '歌曲名称', '类型', '发布日期', '链接', '备注'], rows: [] },
+  { id: 'events', name: '活动记录', cols: ['日期', '活动名称', '类型', '地点', '详情', '备注'], rows: [] },
+  { id: 'awards', name: '荣誉榜单', cols: ['日期', '荣誉名称', '来源', '排名', '详情', '备注'], rows: [] },
+  { id: 'merch', name: '周边图鉴', cols: ['名称', '类型', '发布日期', '获取方式', '图片链接', '备注'], rows: [] },
+  { id: 'news', name: '官方动态', cols: ['日期', '平台', '内容摘要', '链接', '备注'], rows: [] },
+  { id: 'clips', name: '精彩片段', cols: ['日期', '片段描述', '来源', '时长', '文件/链接', '备注'], rows: [] },
+  { id: 'changelog', name: '更新日志', cols: ['日期', '版本', '更新内容', '操作人', '备注'], rows: [
+    ['2026-06-24', 'v1.1', '接入录制脚本自动同步功能', 'Claude', '录制完成后自动写入数据库'],
+    ['2026-06-23', 'v1.0', '创建萌刀数据汇总库', 'Claude', '基于封茗囧菌数据汇总库模板'],
+  ]},
+];
+
+let currentSheet = 0;
+let tableData = {};
+const RECORDINGS_DIR = '.'; // same directory
+
+function init() {
+  // Load saved manual data
+  const saved = localStorage.getItem('mengdao_data');
+  if (saved) {
+    try {
+      const parsed = JSON.parse(saved);
+      for (const [key, rows] of Object.entries(parsed)) {
+        const sheet = SHEETS.find(s => s.id === key);
+        if (sheet) sheet.rows = rows;
+      }
+    } catch(e) {}
+  }
+
+  SHEETS.forEach(s => { tableData[s.id] = [...s.rows]; });
+
+  // Sync recording data
+  syncRecordings(true);
+
+  // Render
+  const tabsDiv = document.getElementById('tabs');
+  SHEETS.forEach((s, i) => {
+    const tab = document.createElement('div');
+    tab.className = 'tab' + (i === 0 ? ' active' : '');
+    tab.innerHTML = s.name;
+    if (s.id === 'live_records') tab.innerHTML += '<span class="tab-badge" id="recCount"></span>';
+    tab.onclick = () => switchSheet(i);
+    tabsDiv.appendChild(tab);
+  });
+  renderSheet();
+  updateStats();
+}
+
+function syncRecordings(silent) {
+  const autoData = [];
+
+  // Read from recording_data.js (window.__RECORDING_DATA__)
+  if (window.__RECORDING_DATA__ && Array.isArray(window.__RECORDING_DATA__)) {
+    window.__RECORDING_DATA__.forEach(rec => {
+      autoData.push([
+        rec.date || '',
+        rec.start_time || '',
+        String(rec.duration_min || ''),
+        '',
+        rec.file || '',
+        rec.file_size_mb ? rec.file_size_mb + ' MB' : '',
+        rec.room_id === '388670993636' ? '萌刀' : rec.room_id || '',
+      ]);
+    });
+  }
+
+  // Merge: keep auto-data first, then manual entries that don't overlap
+  const manualRows = tableData['live_records'] || [];
+  const existingFiles = new Set(autoData.map(r => r[4]));
+  const extraManual = manualRows.filter(r => !existingFiles.has(r[4]) && r[4] !== '');
+
+  tableData['live_records'] = [...autoData, ...extraManual];
+
+  if (!silent) {
+    renderSheet();
+    updateStats();
+    const n = autoData.length;
+    document.getElementById('syncStatus').textContent = n > 0 ? `已同步 ${n} 条录制记录` : '暂无自动录制记录';
+    showToast(n > 0 ? `已同步 ${n} 条录制记录` : '暂无新录制记录');
+  }
+
+  // Update rec count badge
+  const badge = document.getElementById('recCount');
+  if (badge) {
+    const total = tableData['live_records'].length;
+    badge.textContent = total > 0 ? total : '';
+    badge.style.display = total > 0 ? 'inline' : 'none';
+  }
+}
+
+function updateStats() {
+  const recs = tableData['live_records'] || [];
+  // Update encyclopedia stats
+  const enc = tableData['encyclopedia'] || [];
+  if (enc.length >= 7) {
+    // Find and update stats rows
+    for (let i = 0; i < enc.length; i++) {
+      if (enc[i][0] === '最近一次直播' && recs.length > 0) enc[i][1] = recs[recs.length - 1][0] + ' ' + recs[recs.length - 1][1];
+      if (enc[i][0] === '累计录制次数') enc[i][1] = String(recs.length);
+    }
+  }
+  autoSave();
+}
+
+function switchSheet(idx) {
+  currentSheet = idx;
+  document.querySelectorAll('.tab').forEach((t, i) => t.classList.toggle('active', i === idx));
+  renderSheet();
+}
+
+function renderSheet() {
+  const sheet = SHEETS[currentSheet];
+  const data = tableData[sheet.id] || sheet.rows;
+  const content = document.getElementById('content');
+  const isLiveRec = sheet.id === 'live_records';
+
+  let html = '<table><thead><tr>';
+  sheet.cols.forEach(c => html += `<th>${c}</th>`);
+  html += '<th style="width:40px"></th></tr></thead><tbody>';
+
+  data.forEach((row, ri) => {
+    const isAuto = isLiveRec && ri < (window.__RECORDING_DATA__ || []).length;
+    html += `<tr class="${isAuto ? 'auto-row' : ''}">`;
+    sheet.cols.forEach((c, ci) => {
+      const val = row[ci] || '';
+      // For live_records file column, make it clickable
+      if (isLiveRec && ci === 4 && val) {
+        html += `<td><span class="file-link" onclick="openFile('${val}')" title="点击打开文件">${val}</span><span class="copy-btn" onclick="copyPath('${val}',event)" title="复制路径">📋</span></td>`;
+      } else {
+        html += `<td contenteditable="true" data-row="${ri}" data-col="${ci}" data-sheet="${sheet.id}" onblur="cellChanged(this)">${val}</td>`;
+      }
+    });
+    html += `<td><span class="del-btn" onclick="deleteRow(${ri})">✕</span></td>`;
+    html += '</tr>';
+  });
+
+  html += `<tr><td colspan="${sheet.cols.length + 1}" class="add-row" onclick="addRow()">+ 新增一行</td></tr>`;
+  html += '</tbody></table>';
+  content.innerHTML = html;
+
+  // Update badge
+  const badge = document.getElementById('recCount');
+  if (badge) {
+    const total = tableData['live_records'] ? tableData['live_records'].length : 0;
+    badge.textContent = total > 0 ? total : '';
+    badge.style.display = total > 0 ? 'inline' : 'none';
+  }
+}
+
+function openFile(filename) {
+  const isHTTP = window.location.protocol === 'http:' || window.location.protocol === 'https:';
+  if (isHTTP) {
+    // Served via HTTP - stream video directly
+    window.open(filename, '_blank');
+    showToast('正在打开: ' + filename);
+  } else {
+    // File protocol - can't open directly, copy path
+    navigator.clipboard.writeText(filename).then(() => {
+      showToast('文件路径已复制，建议使用 python serve.py 启动服务器后直接播放');
+    });
+  }
+}
+
+function copyPath(path, e) {
+  e.stopPropagation();
+  navigator.clipboard.writeText(path).then(() => showToast('路径已复制: ' + path)).catch(() => {});
+}
+
+function addManualRecording() {
+  document.getElementById('modal').classList.add('show');
+}
+
+function confirmManualAdd() {
+  const date = document.getElementById('mDate').value;
+  const time = document.getElementById('mTime').value;
+  const dur = document.getElementById('mDuration').value;
+  const file = document.getElementById('mFile').value;
+  const topic = document.getElementById('mTopic').value;
+
+  if (!tableData['live_records']) tableData['live_records'] = [];
+  tableData['live_records'].push([date, time, dur, topic, file, '', '手动添加']);
+
+  closeModal();
+  renderSheet();
+  updateStats();
+  showToast('已添加录制记录');
+}
+
+function closeModal() {
+  document.getElementById('modal').classList.remove('show');
+  ['mDate','mTime','mDuration','mFile','mTopic'].forEach(id => document.getElementById(id).value = '');
+}
+
+function cellChanged(td) {
+  const ri = parseInt(td.dataset.row);
+  const ci = parseInt(td.dataset.col);
+  const sid = td.dataset.sheet;
+  if (!tableData[sid]) tableData[sid] = [];
+  if (!tableData[sid][ri]) {
+    tableData[sid][ri] = SHEETS.find(s => s.id === sid).cols.map(() => '');
+  }
+  tableData[sid][ri][ci] = td.textContent.trim();
+  autoSave();
+}
+
+function addRow() {
+  const sheet = SHEETS[currentSheet];
+  if (!tableData[sheet.id]) tableData[sheet.id] = [];
+  tableData[sheet.id].push(sheet.cols.map(() => ''));
+  renderSheet();
+  autoSave();
+  showToast('已添加新行');
+}
+
+function deleteRow(ri) {
+  const sheet = SHEETS[currentSheet];
+  if (!tableData[sheet.id]) return;
+  tableData[sheet.id].splice(ri, 1);
+  renderSheet();
+  autoSave();
+  showToast('已删除');
+}
+
+function deleteSelected() {
+  const sheet = SHEETS[currentSheet];
+  if (!tableData[sheet.id] || tableData[sheet.id].length === 0) return;
+  if (confirm(`确定删除「${sheet.name}」的最后一行吗？`)) {
+    tableData[sheet.id].pop();
+    renderSheet();
+    autoSave();
+    showToast('已删除');
+  }
+}
+
+function autoSave() {
+  // Only save manual data (non-auto rows identified by not being from recording_data.js)
+  const data = {};
+  for (const [key, rows] of Object.entries(tableData)) {
+    if (rows && rows.length > 0) {
+      if (key === 'live_records') {
+        // Save only manual entries
+        const autoFiles = new Set((window.__RECORDING_DATA__ || []).map(r => r.file));
+        const manual = rows.filter(r => !autoFiles.has(r[4]));
+        if (manual.length > 0) data[key] = manual;
+      } else {
+        data[key] = rows;
+      }
+    }
+  }
+  localStorage.setItem('mengdao_data', JSON.stringify(data));
+  updateStats();
+}
+
+function exportJSON() {
+  autoSave();
+  const data = {};
+  SHEETS.forEach(s => {
+    data[s.name] = (tableData[s.id] || []).filter(r => r.some(c => c !== ''));
+  });
+  const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `萌刀数据汇总_${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  showToast('已导出 JSON');
+}
+
+function importJSON() {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = '.json';
+  input.onchange = e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const data = JSON.parse(reader.result);
+        SHEETS.forEach(s => {
+          if (data[s.name]) {
+            // Don't overwrite auto-recording rows
+            if (s.id === 'live_records') {
+              const autoFiles = new Set((window.__RECORDING_DATA__ || []).map(r => r.file));
+              const manual = data[s.name].filter(r => !autoFiles.has(r[4]));
+              tableData[s.id] = [...(tableData[s.id] || []).filter(r => autoFiles.has(r[4])), ...manual];
+            } else {
+              tableData[s.id] = data[s.name];
+            }
+          }
+        });
+        autoSave();
+        renderSheet();
+        updateStats();
+        showToast('导入成功');
+      } catch(e) {
+        showToast('导入失败: ' + e.message);
+      }
+    };
+    reader.readAsText(file);
+  };
+  input.click();
+}
+
+function openRecordingsFolder() {
+  showToast('录制文件位置: C:\\Users\\15867\\douyin-live-recorder\\');
+}
+
+function showToast(msg) {
+  const toast = document.createElement('div');
+  toast.className = 'toast';
+  toast.textContent = msg;
+  document.body.appendChild(toast);
+  setTimeout(() => toast.remove(), 2000);
+}
+
+// Close modal on outside click
+document.getElementById('modal').addEventListener('click', function(e) {
+  if (e.target === this) closeModal();
+});
+
+init();
+</script>
+</body>
+</html>

@@ -1,0 +1,27 @@
+# 视频文件太大，不上传
+*.mp4
+*.flv
+*.ts
+
+# 浏览器数据
+.browser-data/
+
+# Python
+__pycache__/
+*.pyc
+
+# 临时文件
+*.tmp
+temp_*
+api_dump.json
+docs_content.html
+docs_text.txt
+opendoc.json
+sheet_data.json
+sheet_extract.json
+sheet_screenshot.png
+test_output.txt
+anchor_info.json
+raw_api.json
+result.txt
+profile_info.txt
