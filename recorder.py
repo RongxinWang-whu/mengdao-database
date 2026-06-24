@@ -605,6 +605,19 @@ def save_recording_metadata(filepath: str, duration_sec: float, stream_url: str 
         f.write(";\n")
     print(f"   [INFO] 录制记录已同步到数据库")
 
+    # 自动部署到 GitHub Pages（后台静默执行）
+    deploy_script = Path(__file__).parent / "deploy.py"
+    if deploy_script.exists():
+        try:
+            subprocess.Popen(
+                [sys.executable, str(deploy_script)],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                creationflags=subprocess.CREATE_NO_WINDOW if sys.platform == "win32" else 0,
+            )
+        except Exception:
+            pass  # 部署失败不影响录制功能
+
 
 # ============================================================================
 # 监控模式（开播自动录）
